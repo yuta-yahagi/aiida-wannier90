@@ -63,7 +63,7 @@ class Wannier90Calculation(CalcJob):
         '_band.kpt', '.bxsf', '_w.xsf', '_w.cube', '_centres.xyz', '_hr.dat',
         '_tb.dat', '_r.dat', '.bvec', '_wsvec.dat', '_qc.dat', '_dos.dat',
         '_htB.dat', '_u.mat', '_u_dis.mat', '.vdw', '_band_proj.dat',
-        '_band.labelinfo.dat'
+        '_band.labelinfo.dat', '.node_00001.werr'
     )
 
     @classmethod
@@ -188,6 +188,23 @@ class Wannier90Calculation(CalcJob):
             'ERROR_BVECTORS',
             message=
             'An error related to bvectors has been found in the Wannier90 output.'
+        )
+        spec.exit_code(
+            402,
+            'ERROR_DISENTANGLEMENT_NOT_ENOUGH_STATES',
+            message=
+            'Energy window contains fewer states than number of target WFs.'
+        )
+        spec.exit_code(
+            403,
+            'ERROR_PLOT_WF_CUBE',
+            message='Error plotting Wanier functions in cube format.'
+        )
+        spec.exit_code(
+            404,
+            'ERROR_OUTPUT_STDOUT_INCOMPLETE',
+            message=
+            'The stdout output file was incomplete probably because the calculation got interrupted.'
         )
 
     @property

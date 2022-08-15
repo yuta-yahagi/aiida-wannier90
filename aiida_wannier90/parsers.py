@@ -59,6 +59,7 @@ class Wannier90Parser(Parser):
         This parser for this simple code does simply store in the DB a node
         representing the file of forces in real space
         """
+        import re
         from aiida.orm import Dict, SinglefileData
 
         # None if unset
@@ -86,25 +87,41 @@ class Wannier90Parser(Parser):
             )
             return self.exit_codes.ERROR_WERR_FILE_PRESENT
 
+        # Some times the error files are aiida.node_00001.werr, ...
+        error_file_name = re.compile(seedname + r'.+?\.werr')
+        for filename in out_folder.list_object_names():
+            if error_file_name.match(filename):
+                self.logger.error(
+                    'Errors were found please check the retrieved '
+                    f'{filename} file'
+                )
+                return self.exit_codes.ERROR_WERR_FILE_PRESENT
+
         exiting_in_stdout = False
         try:
             with out_folder.open(output_file_name) as handle:
                 out_file = handle.readlines()
             # Wannier90 doesn't always write the .werr file on error
-            if any('Exiting......' in line for line in out_file):
-                exiting_in_stdout = True
-            if any('Unable to satisfy B1' in line for line in out_file):
-                return self.exit_codes.ERROR_BVECTORS
-            if any(
-                'kmesh_get_bvector: Not enough bvectors found' in line
-                for line in out_file
+            for line in out_file:
+                if 'Exiting......' in line:
+                    exiting_in_stdout = True
+                if 'Unable to satisfy B1' in line:
+                    return self.exit_codes.ERROR_BVECTORS
+                if 'kmesh_get_bvector: Not enough bvectors found' in line:
+                    return self.exit_codes.ERROR_BVECTORS
+                if 'kmesh_get: something wrong, found too many nearest neighbours' in line:
+                    return self.exit_codes.ERROR_BVECTORS
+                if 'Energy window contains fewer states than number of target WFs, consider reducing dis_proj_min/increasing dis_win_max?' in line:
+                    return self.exit_codes.ERROR_DISENTANGLEMENT_NOT_ENOUGH_STATES
+                if 'Error plotting WF cube. Try one of the following:' in line:
+                    return self.exit_codes.ERROR_PLOT_WF_CUBE
+            if len(out_file) == 0:
+                return self.exit_codes.ERROR_OUTPUT_STDOUT_INCOMPLETE
+            if out_file[-1].strip() not in (
+                f'Exiting... {seedname}.nnkp written.',
+                'All done: wannier90 exiting'
             ):
-                return self.exit_codes.ERROR_BVECTORS
-            if any(
-                'kmesh_get: something wrong, found too many nearest neighbours'
-                in line for line in out_file
-            ):
-                return self.exit_codes.ERROR_BVECTORS
+                return self.exit_codes.ERROR_OUTPUT_STDOUT_INCOMPLETE
         except OSError:
             self.logger.error("Standard output file could not be found.")
             return self.exit_codes.ERROR_OUTPUT_STDOUT_MISSING
