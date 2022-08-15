@@ -10,8 +10,8 @@
 from aiida import orm
 from aiida.plugins import CalculationFactory
 from aiida.engine import WorkChain, ToContext, calcfunction
-from aiida.orm.nodes.data.upf import get_pseudos_from_structure
-from aiida.orm import Dict
+# from aiida.orm.nodes.data.upf import get_pseudos_from_structure
+from aiida.orm import Dict, load_group
 
 
 class MinimalW90WorkChain(WorkChain):
@@ -124,9 +124,10 @@ class MinimalW90WorkChain(WorkChain):
             'structure':
             self.inputs.structure,
             'pseudos':
-            get_pseudos_from_structure(
-                self.inputs.structure, self.inputs.pseudo_family.value
-            ),
+            # get_pseudos_from_structure(
+            #     self.inputs.structure, self.inputs.pseudo_family.value
+            # ),
+            load_group(self.inputs.pseudo_family.value).get_pseudos(structure=self.inputs.structure),
             'parameters':
             orm.Dict(dict=self.ctx.scf_parameters),
             'kpoints':
@@ -183,9 +184,10 @@ class MinimalW90WorkChain(WorkChain):
             'structure':
             self.inputs.structure,
             'pseudos':
-            get_pseudos_from_structure(
-                self.inputs.structure, self.inputs.pseudo_family.value
-            ),
+            load_group(self.inputs.pseudo_family.value).get_pseudos(structure=self.inputs.structure),
+            # get_pseudos_from_structure(
+            #     self.inputs.structure, self.inputs.pseudo_family.value
+            # ),
             'parameters':
             orm.Dict(dict=nscf_parameters),
             'kpoints':

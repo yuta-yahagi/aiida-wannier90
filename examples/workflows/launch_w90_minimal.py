@@ -76,7 +76,7 @@ def get_static_inputs():
     projections = generate_projections(
         dict(
             position_cart=(-a / 4., a / 4., a / 4.),
-            ang_mtm_l=-3,
+            ang_mtm_l_list=-3,
             spin=None,
             spin_axis=None
         ),
@@ -91,6 +91,8 @@ def get_static_inputs():
         'projections': projections
     }
 
+def get_pseudo_family():
+    return 'SSSP/1.1/PBE/efficiency'
 
 def get_or_create_pseudo_family():
     """Check if the pseudos are already in the DB, create them otherwise.
@@ -206,7 +208,8 @@ def run_wf(pwscf_code, pw2wannier90_code, wannier_code):
     """Run a simple workflow running Quantum ESPRESSO+wannier90 for GaAs."""
     static_inputs = get_static_inputs()
 
-    pseudo_family_name = get_or_create_pseudo_family()
+    # pseudo_family_name = get_or_create_pseudo_family()
+    pseudo_family_name = get_pseudo_family()
 
     # Run the workflow
     run(
