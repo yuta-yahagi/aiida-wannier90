@@ -51,7 +51,6 @@ class Wannier90Calculation(CalcJob):
         'length_unit',
         'unit_cell_cart',
         'atoms_cart',
-        'projections',
         'postproc_setup'  # Pass instead a 'postproc_setup' in the input `settings` node
     )
 

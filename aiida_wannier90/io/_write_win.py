@@ -14,6 +14,7 @@ from aiida.common import InputValidationError
 
 from ..utils import conv_to_fortran_withlists
 from ._group_list import list_to_grouped_string
+# from ..wannier_guess import guess_projection,guess_num_wann
 
 __all__ = ('write_win', )
 
@@ -83,16 +84,19 @@ def _create_win_string( # pylint: disable=too-many-branches,missing-function-doc
     try:
         parameters.setdefault('mp_grid', kpoints.get_kpoints_mesh()[0])
     except AttributeError:
-        pass
+        pass    
+    proj_from_param = parameters.pop('projections',None)
     input_file_lines += _format_parameters(parameters)
 
     block_inputs = {}
     if projections is None:
         # If no projections are specified, random projections is used (Dangerous!)
-        if random_projections:
+        if proj_from_param is not None:
+            block_inputs['projections'] = proj_from_param
+        elif random_projections:
             block_inputs['projections'] = ['random']
         else:
-            block_inputs['projections'] = []
+            raise ValueError('Projection should be determined.')
     elif isinstance(projections, (tuple, list)):
         if random_projections:
             raise InputValidationError(
