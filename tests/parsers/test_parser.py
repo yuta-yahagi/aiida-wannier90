@@ -25,7 +25,7 @@ def test_wannier_default(
     node = generate_calc_job_node(
         entry_point_name=ENTRY_POINT_CALC_JOB,
         computer=fixture_localhost,
-        test_name='gaas/seedname_{}'.format(seedname),
+        test_name=f'gaas/seedname_{seedname}',
         inputs=generate_win_params_gaas(),
         seedname=seedname
     )
@@ -87,7 +87,7 @@ def test_band_parser(
     node = generate_calc_job_node(
         entry_point_name=ENTRY_POINT_CALC_JOB,
         computer=fixture_localhost,
-        test_name='o2sr/band_{}'.format(band_parser),
+        test_name=f'o2sr/band_{band_parser}',
         inputs=inputs
     )
     parser = generate_parser(ENTRY_POINT_PARSER)
@@ -165,3 +165,88 @@ def test_bvectors_too_many(
     assert not calcfunction.is_finished_ok, calcfunction.exit_message
     Wannier90Calculation = CalculationFactory(ENTRY_POINT_CALC_JOB)
     assert calcfunction.exit_status == Wannier90Calculation.exit_codes.ERROR_BVECTORS.status
+
+
+def test_disentanglement_not_enough_states(
+    fixture_localhost, generate_calc_job_node, generate_parser
+):
+    """Check that parsing works for bvector error."""
+    from aiida.plugins import CalculationFactory
+
+    node = generate_calc_job_node(
+        entry_point_name=ENTRY_POINT_CALC_JOB,
+        computer=fixture_localhost,
+        test_name='HK'
+    )
+    parser = generate_parser(ENTRY_POINT_PARSER)
+    _, calcfunction = parser.parse_from_node(node, store_provenance=False)
+
+    assert calcfunction.is_finished, calcfunction.exception
+    assert not calcfunction.is_finished_ok, calcfunction.exit_message
+    Wannier90Calculation = CalculationFactory(ENTRY_POINT_CALC_JOB)
+    assert calcfunction.exit_status == Wannier90Calculation.exit_codes.ERROR_DISENTANGLEMENT_NOT_ENOUGH_STATES.status
+
+
+def test_plot_wf_cube(
+    fixture_localhost, generate_calc_job_node, generate_parser
+):
+    """Check that parsing works for cube format error."""
+    from aiida.plugins import CalculationFactory
+
+    node = generate_calc_job_node(
+        entry_point_name=ENTRY_POINT_CALC_JOB,
+        computer=fixture_localhost,
+        test_name='plot_wf_cube'
+    )
+    parser = generate_parser(ENTRY_POINT_PARSER)
+    _, calcfunction = parser.parse_from_node(node, store_provenance=False)
+
+    assert calcfunction.is_finished, calcfunction.exception
+    assert not calcfunction.is_finished_ok, calcfunction.exit_message
+    Wannier90Calculation = CalculationFactory(ENTRY_POINT_CALC_JOB)
+    assert calcfunction.exit_status == Wannier90Calculation.exit_codes.ERROR_PLOT_WF_CUBE.status
+
+
+def test_output_stdout_incomplete(
+    fixture_localhost, generate_calc_job_node, generate_parser
+):
+    """Check that parsing works for incomplete wout error."""
+    from aiida.plugins import CalculationFactory
+
+    node = generate_calc_job_node(
+        entry_point_name=ENTRY_POINT_CALC_JOB,
+        computer=fixture_localhost,
+        test_name='output_stdout_incomplete'
+    )
+    parser = generate_parser(ENTRY_POINT_PARSER)
+    _, calcfunction = parser.parse_from_node(node, store_provenance=False)
+
+    assert calcfunction.is_finished, calcfunction.exception
+    assert not calcfunction.is_finished_ok, calcfunction.exit_message
+    Wannier90Calculation = CalculationFactory(ENTRY_POINT_CALC_JOB)
+    assert calcfunction.exit_status == Wannier90Calculation.exit_codes.ERROR_OUTPUT_STDOUT_INCOMPLETE.status
+
+
+def test_restart(
+    fixture_localhost, generate_calc_job_node, generate_parser, data_regression
+):
+    """Basic check of parsing a Wannier90 restart calculation."""
+    node = generate_calc_job_node(
+        entry_point_name=ENTRY_POINT_CALC_JOB,
+        computer=fixture_localhost,
+        test_name='restart'
+    )
+    parser = generate_parser(ENTRY_POINT_PARSER)
+    results, calcfunction = parser.parse_from_node(
+        node, store_provenance=False
+    )
+
+    assert calcfunction.is_finished, calcfunction.exception
+    assert calcfunction.is_finished_ok, calcfunction.exit_message
+    assert not orm.Log.objects.get_logs_for(node)
+    assert 'output_parameters' in results
+
+    data_regression.check({
+        'output_parameters':
+        results['output_parameters'].get_dict(),
+    })
