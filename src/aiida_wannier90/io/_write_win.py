@@ -105,7 +105,7 @@ def _create_win_string(  # pylint: disable=too-many-arguments
         elif random_projections:
             block_inputs['projections'] = ['random']
         else:
-            raise ValueError('Projection should be determined.')
+             block_inputs['projections'] = []
     elif isinstance(projections, (tuple, list)):
         if random_projections:
             raise InputValidationError(
