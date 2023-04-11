@@ -10,7 +10,6 @@
 from aiida import orm
 from aiida.engine import ToContext, WorkChain, calcfunction
 from aiida.orm import Dict
-from aiida.orm.nodes.data.upf import get_pseudos_from_structure
 from aiida.plugins import CalculationFactory
 
 
@@ -105,6 +104,8 @@ class MinimalW90WorkChain(WorkChain):
 
         # A fixed value, for testing
         ecutwfc = 30.0
+        family = orm.load_group(self.inputs.pseudo_family.value)
+        pseudos = family.get_pseudos(structure=self.inputs.structure)
 
         self.ctx.scf_parameters = {
             "CONTROL": {
@@ -119,9 +120,7 @@ class MinimalW90WorkChain(WorkChain):
         inputs = {
             "code": self.inputs.pw_code,
             "structure": self.inputs.structure,
-            "pseudos": get_pseudos_from_structure(
-                self.inputs.structure, self.inputs.pseudo_family.value
-            ),
+            "pseudos": pseudos,
             "parameters": orm.Dict(self.ctx.scf_parameters),
             "kpoints": self.inputs.kpoints_scf,
             "metadata": {
@@ -165,12 +164,12 @@ class MinimalW90WorkChain(WorkChain):
         nscf_parameters = self.ctx.scf_parameters.copy()
         nscf_parameters["CONTROL"]["calculation"] = "nscf"
 
+        family = orm.load_group(self.inputs.pseudo_family.value)
+        pseudos = family.get_pseudos(structure=self.inputs.structure)
         inputs = {
             "code": self.inputs.pw_code,
             "structure": self.inputs.structure,
-            "pseudos": get_pseudos_from_structure(
-                self.inputs.structure, self.inputs.pseudo_family.value
-            ),
+            "pseudos": pseudos,
             "parameters": orm.Dict(nscf_parameters),
             "kpoints": self.ctx.kpoints_nscf_explicit,
             "parent_folder": self.ctx.pw_scf.outputs.remote_folder,

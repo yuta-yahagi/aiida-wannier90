@@ -78,7 +78,7 @@ def get_static_inputs():
     projections = generate_projections(
         dict(
             position_cart=(-a / 4.0, a / 4.0, a / 4.0),
-            ang_mtm_l=-3,
+            ang_mtm_l_list=-3,
             spin=None,
             spin_axis=None,
         ),
@@ -94,7 +94,7 @@ def get_static_inputs():
     }
 
 def get_pseudo_family():
-    return 'SSSP/1.1/PBE/efficiency'
+    return 'SSSP/1.2/PBE/efficiency'
 
 def get_or_create_pseudo_family():
     """Check if the pseudos are already in the DB, create them otherwise.
@@ -145,7 +145,7 @@ def get_or_create_pseudo_family():
     )
 
     # continue trying creating the group if the previous one existed
-    safe_counter = 0
+    safe_counter = 0    
     while not group_created:
         safe_counter += 1
         if safe_counter > 10:
